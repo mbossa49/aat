@@ -32,6 +32,8 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.index.TermEnum;
 import org.apache.lucene.queryParser.QueryParser;
 import org.apache.lucene.queryParser.QueryParser.Operator;
 import org.apache.lucene.search.BooleanClause.Occur;
@@ -40,8 +42,9 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.store.RAMDirectory;
-import org.apache.lucene.util.PagedBytes.Reader;
 import org.apache.lucene.util.Version;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
@@ -60,6 +63,7 @@ import fr.cnam.util.ReferentielCSVReaderUtil;
 @Service
 public class LuceneIndexRechercheImpl implements LuceneIndexRecherche {
 
+	private final Logger logger = LoggerFactory.getLogger(LuceneIndexRechercheImpl.class);
     /**
      * Analyzer.
      */
@@ -118,7 +122,7 @@ public class LuceneIndexRechercheImpl implements LuceneIndexRecherche {
      */
 //    @Override
     public void indexationMemoire(final File pReferentielMotifAAT) {
-        System.out.println("DEBUT LuceneIndexRechercheBSImpl.indexationMemoire()");
+    	logger.info("DEBUT LuceneIndexRechercheBSImpl.indexationMemoire()");
         BufferedReader br = null;
         IndexWriter writer  = null;
         try {
@@ -141,22 +145,20 @@ public class LuceneIndexRechercheImpl implements LuceneIndexRecherche {
             br = new BufferedReader(new FileReader(pReferentielMotifAAT));
             int i = 0;
 
-//            System.out.println("Taille (en byte) memoire du thesaurus := "
+//            logger.info("Taille (en byte) memoire du thesaurus := "
 //                          + ramDirectory.ramBytesUsed());
             
             // Affichage des tokens dans le libelle
-            System.out.println("****** DEBUT : Affichage des tokens dans le libelle *******");
-            int readerTermsIndexDivisor = writer.getConfig().getReaderTermsIndexDivisor();
-            System.out.println("LuceneIndexRechercheImpl.indexationMemoire()" + readerTermsIndexDivisor);
-//            TermEnum terms = writer.getReader().terms(new Term(CHAMP_LIBELLE));
-//            if (terms.term() != null) {
-//                do {
-//                    Term term = terms.term();
-//                    if (term.field().endsWith(CHAMP_LIBELLE))
-//                    System.out.println("[" + term.field() + "] == "+ term.text());
-//                } while(terms.next());
-//            }
-            System.out.println("****** FIN : Affichage des tokens dans le libelle *******");
+            logger.debug("****** DEBUT : Affichage des tokens dans le libelle *******");
+            TermEnum terms = writer.getReader().terms(new Term(CHAMP_LIBELLE));
+            if (terms.term() != null) {
+                do {
+                    Term term = terms.term();
+                    if (term.field().endsWith(CHAMP_LIBELLE))
+                    logger.info("[" + term.field() + "] == "+ term.text());
+                } while(terms.next());
+            }
+            logger.debug("****** FIN : Affichage des tokens dans le libelle *******");
 
             if (!(ramDirectory.sizeInBytes() > 0)) {
                 while ((line = br.readLine()) != null) {
@@ -171,14 +173,12 @@ public class LuceneIndexRechercheImpl implements LuceneIndexRecherche {
             	}
             }
 
-			System.out.println("Nombre de documents indexés : ".concat(String
+            logger.info("Nombre de documents indexés : ".concat(String
 						.valueOf(i)));
-
-
             br.close();
             writer.close();
         } catch (Exception e) {
-            System.out.println("Une erreur s'est produite lors de l'indexation du thesaurus : " + e);
+        	logger.error("Une erreur s'est produite lors de l'indexation du thesaurus : " + e);
         } finally {
         	try {
 				if(null != br){
@@ -188,12 +188,12 @@ public class LuceneIndexRechercheImpl implements LuceneIndexRecherche {
 					writer.close();
 				}
 			} catch (CorruptIndexException e) {
-	            System.out.println("Une erreur s'est produite lors de l'indexation du thesaurus : " + e);
+				logger.error("Une erreur s'est produite lors de l'indexation du thesaurus : " + e);
 			} catch (IOException e) {
-	            System.out.println("Une erreur s'est produite lors de l'indexation du thesaurus : " +  e);
+				logger.error("Une erreur s'est produite lors de l'indexation du thesaurus : " +  e);
 			}
         }
-        System.out.println("FIN LuceneIndexRechercheBSImpl.indexationMemoire()");
+        logger.info("FIN LuceneIndexRechercheBSImpl.indexationMemoire()");
     }
 
     /*
@@ -205,8 +205,8 @@ public class LuceneIndexRechercheImpl implements LuceneIndexRecherche {
 //    @Override
     public List<Motif> rechercher(final String pLibelleSaisie) {
 
-        System.out.println("DEBUT LuceneIndexRechercheBSImpl.rechercher()");
-        System.out.println("La Saisie du Professionel de Sante := [" + pLibelleSaisie +"]");
+        logger.info("DEBUT LuceneIndexRechercheBSImpl.rechercher()");
+        logger.info("La Saisie du Professionel de Sante := [" + pLibelleSaisie +"]");
         List<Motif> resultat = new ArrayList<Motif>();
         String saisieValide = extraireSaiSieValide(pLibelleSaisie);
         
@@ -218,7 +218,7 @@ public class LuceneIndexRechercheImpl implements LuceneIndexRecherche {
             try {
                 // Normalisation de la saisie utilisateur.
                 String saisieNormalise = supprAccent(saisieValide);
-                System.out.println("La saisie valide := [" + saisieNormalise + "]");
+                logger.info("La saisie valide := [" + saisieNormalise + "]");
                 List<Motif> lListeMotif = null;
                 if (lListeMotif == null) {
                     InputStream inputStream = resourceLoader.getResource("FichierReferentielMotifsAAT.csv").getInputStream();
@@ -238,12 +238,12 @@ public class LuceneIndexRechercheImpl implements LuceneIndexRecherche {
                 resultat = singleTermSearch(saisieNormalise, searcher);
 
             } catch (ParseException e) {
-                System.out.println(String.format(MSG_ERREUR_RECHERCHE, pLibelleSaisie) +  e);
+                logger.info(String.format(MSG_ERREUR_RECHERCHE, pLibelleSaisie) +  e);
 
             } catch (CorruptIndexException e1) {
-            	System.out.println(String.format(MSG_ERREUR_RECHERCHE, pLibelleSaisie) + e1);
+            	logger.info(String.format(MSG_ERREUR_RECHERCHE, pLibelleSaisie) + e1);
             } catch (IOException e2) {
-            	System.out.println(String.format(MSG_ERREUR_RECHERCHE,
+            	logger.info(String.format(MSG_ERREUR_RECHERCHE,
                 		pLibelleSaisie) + e2);
             } finally {
                 try {
@@ -252,12 +252,12 @@ public class LuceneIndexRechercheImpl implements LuceneIndexRecherche {
 //						reader.close();
 					}
 				} catch (Exception e) {
-					System.out.println(String.format(MSG_ERREUR_RECHERCHE,
+					logger.info(String.format(MSG_ERREUR_RECHERCHE,
 	                		pLibelleSaisie) + e);
 				}
             }
         }
-        System.out.println("FIN LuceneIndexRechercheBSImpl.rechercher()");
+        logger.info("FIN LuceneIndexRechercheBSImpl.rechercher()");
         return resultat;
     }
 
@@ -391,7 +391,7 @@ public class LuceneIndexRechercheImpl implements LuceneIndexRecherche {
 	        
 	        ScoreDoc[] hits = pSearcher.search(query, null, MAX_RESULT).scoreDocs;
 	        
-	        System.out.println("======= { Nombre de motif trouvé := " + hits.length + " } ===========\n");
+	        logger.info("======= { Nombre de motif trouvé := " + hits.length + " } ===========\n");
 	        
 	        for (int i = 0; i < hits.length; i++) {
 	            ScoreDoc doc = hits[i];
@@ -401,7 +401,7 @@ public class LuceneIndexRechercheImpl implements LuceneIndexRecherche {
 	            motif.setLibelle(document.get(CHAMP_LIBELLE));
 	            motif.setCodification(document.get(CHAMP_CODE_FONCTIONNEL));
 	            resultat.add(motif);
-//	            System.out.println(pSearcher.explain(bq, doc.doc));
+//	            logger.info(pSearcher.explain(bq, doc.doc));
 	        }
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -419,7 +419,7 @@ public class LuceneIndexRechercheImpl implements LuceneIndexRecherche {
 //    @Override
 	public void indexationMemoire(final List<Motif> pReferentielMotifAAT) {
 
-    System.out.println("DEBUT LuceneIndexRechercheBSImpl.indexationMemoire()");
+	logger.info("DEBUT LuceneIndexRechercheBSImpl.indexationMemoire()");
     IndexWriter writer  = null;
     try {
     	// Renseignement des analyzer different pour les champs
@@ -437,7 +437,7 @@ public class LuceneIndexRechercheImpl implements LuceneIndexRecherche {
         writer = new IndexWriter(ramDirectory, config);
         int i = 0;
 
-        System.out.println("Taille (en byte) memoire du thesaurus := "
+        logger.info("Taille (en byte) memoire du thesaurus := "
                       + ramDirectory.sizeInBytes());
 
 
@@ -449,56 +449,47 @@ public class LuceneIndexRechercheImpl implements LuceneIndexRecherche {
                 i++;
             }
         }
-        writer.close();
-        // Affichage des tokens dans le libelle
-       System.out.println("****** DEBUT : Affichage des tokens dans le libelle *******");
-//       DirectoryReader reader = DirectoryReader.open(ramDirectory);
-//       Terms terms = SlowCompositeReaderWrapper.wrap(DirectoryReader.open(ramDirectory)).terms(CHAMP_LIBELLE);
-       System.out.println("LuceneIndexRechercheImpl.indexationMemoire() => ");
 
-//       Field fields = MultiFields.getFields(reader);
-//       for (String field : fields) {
-//    	   if (field.equals(CHAMP_LIBELLE)) {
-//    		   Terms terms = fields.terms(field);
-//           
-//	           TermsEnum termsEnum = terms.iterator(null);
-//	           int count = 0;
-//	           while (termsEnum.next() != null) {
-//	        	   System.out.println(termsEnum.term().utf8ToString());
-//	               count++;
-//	           }
-//	           System.out.println("\n ********Nombre de token (LIBELLE) dans l'index : " + count + " ********");
-//    	   }           
-//       }
+        
+        // Affichage des tokens dans le libelle
+       logger.debug("****** DEBUT : Affichage des tokens dans le libelle *******");
        
-       System.out.println("****** FIN : Affichage des tokens dans le libelle *******");
-       
-        System.out.println("Nombre de documents indexés : ".concat(String
+       TermEnum terms = writer.getReader().terms(new Term(CHAMP_LIBELLE));
+       if (terms.term() != null) {
+           do {
+               Term term = terms.term();
+               if (term.field().endsWith(CHAMP_LIBELLE))
+               logger.info("[" + term.field() + "] == "+ term.text());
+           } while(terms.next());
+       }
+       logger.debug("****** FIN : Affichage des tokens dans le libelle *******");
+              
+       logger.info("Nombre de documents indexés : ".concat(String
 					.valueOf(i)));
-        System.out.println("Taille (en byte) memoire du thesaurus := "
+       logger.info("Taille (en byte) memoire du thesaurus := "
                 + ramDirectory.sizeInBytes());
         writer.close();
     } catch (Exception e) {
-        System.out.println("Une erreur s'est produite lors de l'indexation du thesaurus : " + e);
+    	logger.error("Une erreur s'est produite lors de l'indexation du thesaurus : " + e);
     } finally {
     	try {
 			if(null != writer){
 				writer.close();
 			}
 		} catch (CorruptIndexException e) {
-            System.out.println("Une erreur s'est produite lors de l'indexation du thesaurus : " + e);
+			logger.error("Une erreur s'est produite lors de l'indexation du thesaurus : " + e);
 		} catch (IOException e) {
-            System.out.println("Une erreur s'est produite lors de l'indexation du thesaurus : " + e);
+			logger.error("Une erreur s'est produite lors de l'indexation du thesaurus : " + e);
 		}
     }
-    System.out.println("FIN LuceneIndexRechercheBSImpl.indexationMemoire()");
+    logger.info("FIN LuceneIndexRechercheBSImpl.indexationMemoire()");
    }
 
 //	public static void main(String[] args) {
 //		String saisiePS = "Angine";
 //		LuceneIndexRecherche service = new LuceneIndexRechercheImpl();
 //		List<Motif> resultatRecherche = service.rechercher(saisiePS);
-//		System.out.println(resultatRecherche.size() + " motif" + (resultatRecherche.size() > 1 ? "s" : "")
+//		logger.info(resultatRecherche.size() + " motif" + (resultatRecherche.size() > 1 ? "s" : "")
 //				+ " correspondent é la recherche *****************");
 //		for (Motif motifBO : resultatRecherche) {
 //			System.err.println("Motif:= [" + motifBO.getLibelle() + "]");
