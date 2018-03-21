@@ -30,14 +30,14 @@ import org.apache.lucene.util.Version;
 public final class AATLuceneAnalyzerUtil {
 
 	/**
-	 * Liste des termes ignores ï¿½ l'indexation et pour la recherche dans lucene.
+	 * Liste des termes ignores à l'indexation et pour la recherche dans lucene.
 	 * Elle permet d'etendre la liste de base FrenchAnalyzer.getDefaultStopSet()
 	 */
 	public static final String[] STOP_WORD = new String[] { "chez","-","droite","droit","gauche","drt","drte","gche","gches",
-			"gch","gauches","droites","dte","bilatÃ©ral","bilatÃ©rale","bilater","bilat","gau"};
+			"gch","gauches","droites","dte","bilatéral","bilatérale","bilater","bilat","gau"};
 
 	/**
-	 * Constructeur privÃ©.
+	 * Constructeur privé.
 	 */
 	private AATLuceneAnalyzerUtil() {
 		super();
@@ -90,7 +90,7 @@ public final class AATLuceneAnalyzerUtil {
 	}
 
 	/**
-	 * Cette methode permet d'etendre la liste, par defaut, des mots franï¿½ais,
+	 * Cette methode permet d'etendre la liste, par defaut, des mots français,
 	 * insignifiants pour etre indexes. Ex : le, la une etc..
 	 * 
 	 * @return la liste resultante.

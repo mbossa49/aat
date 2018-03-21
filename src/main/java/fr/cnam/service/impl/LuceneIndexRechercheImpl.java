@@ -79,7 +79,7 @@ public class LuceneIndexRechercheImpl implements LuceneIndexRecherche {
     private static String MSG_ERREUR_RECHERCHE =
     "Une erreur s'est produite lors la recherche de motif pour le terme:=%s";
 
-    /** Maximum de resultat de l'autocomplï¿½tion. */
+    /** Maximum de resultat de l'autocomplétion. */
     private static final int MAX_RESULT = 10;
 
     /** Le champ code du motif. */
@@ -171,7 +171,7 @@ public class LuceneIndexRechercheImpl implements LuceneIndexRecherche {
             	}
             }
 
-			System.out.println("Nombre de documents indexï¿½s : ".concat(String
+			System.out.println("Nombre de documents indexés : ".concat(String
 						.valueOf(i)));
 
 
@@ -293,10 +293,10 @@ public class LuceneIndexRechercheImpl implements LuceneIndexRecherche {
     }
 
     /**
-     * Mï¿½thode parmettant de valider si la saisie peut faire l'objet d'une
-     * recherche par autocomplï¿½tion.
+     * Méthode parmettant de valider si la saisie peut faire l'objet d'une
+     * recherche par autocomplétion.
      *
-     * L'idï¿½e est retirer tous les termes insignifiants contenus
+     * L'idée est retirer tous les termes insignifiants contenus
      * dans la saisie de l'utulisateur.
      *
      * @param pSaisieUtilisateur :
@@ -365,7 +365,7 @@ public class LuceneIndexRechercheImpl implements LuceneIndexRecherche {
 
         BooleanQuery bq = new BooleanQuery();
         /**
-         * Rï¿½sultat de la recherche.
+         * Résultat de la recherche.
          */
         List<Motif> resultat = new ArrayList<Motif>();
         String str = pTerm.trim().concat("*");
@@ -391,7 +391,7 @@ public class LuceneIndexRechercheImpl implements LuceneIndexRecherche {
 	        
 	        ScoreDoc[] hits = pSearcher.search(query, null, MAX_RESULT).scoreDocs;
 	        
-	        System.out.println("======= { Nombre de motif trouvï¿½ := " + hits.length + " } ===========\n");
+	        System.out.println("======= { Nombre de motif trouvé := " + hits.length + " } ===========\n");
 	        
 	        for (int i = 0; i < hits.length; i++) {
 	            ScoreDoc doc = hits[i];
@@ -473,7 +473,7 @@ public class LuceneIndexRechercheImpl implements LuceneIndexRecherche {
        
        System.out.println("****** FIN : Affichage des tokens dans le libelle *******");
        
-        System.out.println("Nombre de documents indexï¿½s : ".concat(String
+        System.out.println("Nombre de documents indexés : ".concat(String
 					.valueOf(i)));
         System.out.println("Taille (en byte) memoire du thesaurus := "
                 + ramDirectory.sizeInBytes());
@@ -499,7 +499,7 @@ public class LuceneIndexRechercheImpl implements LuceneIndexRecherche {
 //		LuceneIndexRecherche service = new LuceneIndexRechercheImpl();
 //		List<Motif> resultatRecherche = service.rechercher(saisiePS);
 //		System.out.println(resultatRecherche.size() + " motif" + (resultatRecherche.size() > 1 ? "s" : "")
-//				+ " correspondent ï¿½ la recherche *****************");
+//				+ " correspondent é la recherche *****************");
 //		for (Motif motifBO : resultatRecherche) {
 //			System.err.println("Motif:= [" + motifBO.getLibelle() + "]");
 //		}
